@@ -1,0 +1,27 @@
+{
+  "name": "RNFirebaseTS",
+  "version": "0.0.4",
+  "private": true,
+  "scripts": {
+    "start": "node node_modules/react-native/local-cli/cli.js start --transformer node_modules/react-native-sm-transformer --skipflow",
+    "android": "adb reverse tcp:8081 tcp:8081 && node node_modules/react-native/local-cli/cli.js run-android",
+    "ios": "node node_modules/react-native/local-cli/cli.js run-ios",
+    "prebuild": "node node_modules/.bin/rimraf build",
+    "build": "tsc",
+    "watch": "tsc -p . --watch"
+  },
+  "dependencies": {
+    "react": "^15.4.2",
+    "react-native": "0.42.3",
+    "react-native-button": "^1.8.2",
+    "react-native-firebase": "^1.0.0-alpha6"
+  },
+  "devDependencies": {
+    "@types/react": "^15.0.16",
+    "@types/react-native": "^0.42.8",
+    "react-native-sm-transformer": "^1.0.3",
+    "rimraf": "^2.6.1",
+    "tslint": "^4.5.1",
+    "typescript": "^2.2.1"
+  }
+}
