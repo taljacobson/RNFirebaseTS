@@ -1,4 +1,4 @@
-import { auth, config } from 'firebase-functions';
+import { auth, config, analytics } from 'firebase-functions';
 
 import { database, initializeApp } from 'firebase-admin';
 
@@ -37,3 +37,19 @@ exports.cleanupUserData = auth.user().onDelete(event => {
 });
 
 
+exports.analyticsClicked = analytics.event('clicked_advert').onLog(event => {
+     const uid = event.data.user.userId || event.data.params.uid
+     let refUser = database().ref('/user').child(uid)
+    return refUser.once('value', snapshot => {
+         let snap:{clicked: number, left: number} = snapshot.val()
+         if(snap.clicked && snap.left){
+            let { clicked, left} = snap;
+            clicked = ++clicked;
+            left = --left;
+            if (left === 0) {
+                return refUser.update({clicked: 0, left: 10})
+            } 
+            return refUser.update({clicked, left})
+         }
+     })
+});
