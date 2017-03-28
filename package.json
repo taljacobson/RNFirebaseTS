@@ -14,7 +14,7 @@
     "react": "^15.4.2",
     "react-native": "0.42.3",
     "react-native-button": "^1.8.2",
-    "react-native-firebase": "^1.0.0-alpha6"
+    "react-native-firebase": "^1.0.0-alpha9"
   },
   "devDependencies": {
     "@types/react": "^15.0.16",
