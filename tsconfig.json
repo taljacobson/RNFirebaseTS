@@ -5,6 +5,7 @@
         "jsx": "react",
         "outDir": "build",
         "rootDir": "src",
+        "moduleResolution": "node",
         "allowSyntheticDefaultImports": true,
         "noImplicitAny": true,
         "experimentalDecorators": true,
