@@ -13,13 +13,15 @@ interface Props {
 interface State {
   user?: any;
   loggedIn: boolean;
-  clickedCount?: number
+  clickedCount?: number;
+  isWin?: string
 }
 
 export default class App extends Component<Props, State> {
   state: State = {
     user: null,
-    loggedIn: false
+    loggedIn: false,
+    isWin: null
   }
 
   componentWillMount() {
@@ -33,6 +35,7 @@ export default class App extends Component<Props, State> {
         console.log('onAuthStateChanged', user)
         const { uid } = user
         firebase.analytics().setUserId(uid)
+
         this.setState({ user, loggedIn: !this.state.loggedIn })
       } else {
         this.setState({
@@ -45,8 +48,45 @@ export default class App extends Component<Props, State> {
   }
 
   componentDidMount() {
+    firebase.messaging().getInitialNotification()
+      .then((notification) => {
+        console.log('Notification which opened the app: ', notification);
+        if(notification.win)
+          this.setState({isWin: notification.win})
+      });
+
+      firebase.messaging().onMessage((message) => {
+        console.log(message)
+        if(message.win)
+          this.setState({isWin: message.win})
+      });
+  }
+
+  increaseCount() {
+    const uid = firebase.auth().currentUser.uid;
+    firebase.database().ref('user/').child(uid).update({ clicked: this.state.clickedCount + 1 })
+    this.setState({})
+  }
+
+  Analytic() {
+    if (this.state.user) {
+      firebase.analytics().logEvent('clicked_Update', { uid: this.state.user.uid });
+    }
+  }
+
+
+  async sendMessage() {
+    let token = await firebase.messaging().getToken()
+    console.log('Device FCM Token: ', token);
+    firebase.database().ref('tokens/').child(this.state.user.uid).set({ token })
 
   }
+
+  async upDateHand(hand: string) {
+    await this.sendMessage()
+    await firebase.database().ref('hands/').child(this.state.user.uid).update({ hand })
+  }
+
   renderAuth() {
     if (!this.state.loggedIn || !this.state.user)
       return <LoginForm />;
@@ -55,6 +95,13 @@ export default class App extends Component<Props, State> {
         Logout
       </Button>
     )
+  }
+
+  renderButtonFCM() {
+    return (
+      <Button onPress={this.sendMessage.bind(this)}>
+        get a message from firebase
+        </Button>)
   }
 
   renderIncrease() {
@@ -77,24 +124,38 @@ export default class App extends Component<Props, State> {
     return (
       <View>
 
+
         <Button onPress={this.Analytic.bind(this)}>
           increase + {this.state.clickedCount}
         </Button>
-
+        {this.renderButtonFCM()}
       </View>)
   }
 
-  increaseCount() {
-    const uid = firebase.auth().currentUser.uid;
-    firebase.database().ref('user/').child(uid).update({ clicked: this.state.clickedCount + 1 })
-    this.setState({})
+  renderLeftRight() {
+    const LeftRight = ['left', 'right']
+
+    return (
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+        {LeftRight.map((value, index) =>
+          <Button key={value + index} onPress={this.upDateHand.bind(this, value)} >{value}</Button>
+        )}
+      </View>
+    );
   }
+  isloggedIn() {
+    if (!this.state.user) return this.renderAuth();
 
-  Analytic() {
-    if (this.state.user) {
+    return (
+      <View>
+        <Text style={styles.welcome}>
+          lets play a Game, pick left or Right
+          </Text>
+        {this.renderLeftRight()}
+        {this.state.loggedIn ? this.renderIncrease() : null}
+      </View>
+    )
 
-      firebase.analytics().logEvent('clicked_advert', { uid: this.state.user.uid });
-    }
   }
 
   render() {
@@ -102,19 +163,9 @@ export default class App extends Component<Props, State> {
     return (
       <View style={{ flex: 1 }}>
         <View style={styles.container}>
-          <Text style={styles.welcome}>
-            Welcome to React Native!
-                </Text>
-          <Text style={styles.instructions}>
-            To get started, edit index.android.js
-                </Text>
-          <Text style={styles.instructions}>
-            Shake or press menu button for dev menu
-                </Text>
-          {this.state.loggedIn ? this.renderIncrease() : null}
-
+        < Text style={styles.welcome}>{this.state.isWin || null}</Text>
+          {this.isloggedIn()}
         </View>
-        {this.renderAuth()}
       </View>
     );
   }
